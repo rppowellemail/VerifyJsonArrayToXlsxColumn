@@ -1,4 +1,5 @@
 import groovy.json.JsonSlurper
+import static groovy.json.JsonOutput.*
 
 //def dumpkeys1(p, o) {
 //    if (p.length() == 0) {
@@ -32,32 +33,64 @@ import groovy.json.JsonSlurper
 //}
 //def dumpkeys1(o) { dumpkeys1('', o) }
 
-def dumpkeys2(jsonpathbits, jsonobject) {
+//def dumpkeys2(jsonpathbits, jsonobject) {
+//    if (jsonobject instanceof java.util.Map) {
+//        def keys = jsonobject.keySet()
+//        keys.each { it -> 
+//            if (jsonobject[it] instanceof java.util.Map) {
+//                dumpkeys2((jsonpathbits + [it]), jsonobject[it])
+//            } else if (jsonobject[it] instanceof java.util.ArrayList) {
+//                jsonobject[it].eachWithIndex { ait, i ->
+//                    dumpkeys2(jsonpathbits + [it+"["+i+"]"], ait)
+//                }
+//            } else if (jsonobject[it] instanceof String) {
+//                if(jsonobject[it].length() == 0) {
+//                    println((jsonpathbits + [it]).toString() + " -- \"\"") 
+//                } else {
+//                    println((jsonpathbits + [it]).toString()) 
+//                }
+//            } else if (jsonobject[it] == null) {
+//                println((jsonpathbits + [it]).toString() + " -- null") 
+//            } else {
+//                println((jsonpathbits + [it]).toString() + " -- unexpected " + jsonobject[it].getClass()) 
+//            }
+//        }
+//    }
+//}
+//def dumpkeys2(o) { dumpkeys2(['$'], o) }
+
+def dumpkeys3(jsonpath, jsonpathbits, jsonobject, parseresults) {
     if (jsonobject instanceof java.util.Map) {
         def keys = jsonobject.keySet()
         keys.each { it -> 
             if (jsonobject[it] instanceof java.util.Map) {
-                dumpkeys2((jsonpathbits + [it]), jsonobject[it])
+                dumpkeys3(jsonpath+"."+it, (jsonpathbits + [it]), jsonobject[it], parseresults)
             } else if (jsonobject[it] instanceof java.util.ArrayList) {
                 jsonobject[it].eachWithIndex { ait, i ->
-                    dumpkeys2(jsonpathbits + [it+"["+i+"]"], ait)
+                    dumpkeys3(jsonpath+"."+it+"["+i+"]", jsonpathbits + [it], ait, parseresults)
                 }
             } else if (jsonobject[it] instanceof String) {
                 if(jsonobject[it].length() == 0) {
-                    println((jsonpathbits + [it]).toString() + " -- \"\"") 
+                    println(jsonpath + "." + it + " -- \"\"") 
                 } else {
-                    println((jsonpathbits + [it]).toString()) 
+                    if (parseresults.containsKey(jsonpath)) {
+                        parseresults[jsonpath][2].add(it)
+                    } else {
+                        parseresults[jsonpath] = [jsonpathbits[-2], jsonpathbits[-1], [it]]
+                    }
+                    //parseresults[jsonpath] = parseresults.getOrDefault(jsonpath, []) + [it]
+                    //println(jsonpath + "." + it + " " + ([jsonpathbits[-1], jsonpathbits[-2]].toString()))
                 }
             } else if (jsonobject[it] == null) {
-                println((jsonpathbits + [it]).toString() + " -- null") 
+                println(jsonpath + "." + it + " -- null") 
             } else {
-                println((jsonpathbits + [it]).toString() + " -- unexpected " + jsonobject[it].getClass()) 
+                println(jsonpath + "." + it + " -- unexpected " + jsonobject[it].getClass()) 
             }
         }
     }
 }
-def dumpkeys2(o) { dumpkeys2(['$'], o) }
 
+def dumpkeys3(o, parseresults) { dumpkeys3('$', ['$'], o, parseresults) }
 
 if (args.size() < 1) {
     println "Need arguement"
@@ -68,4 +101,6 @@ File f = new File(args[0])
 def jsonSlurper = new JsonSlurper()
 j = jsonSlurper.parse(f)
 
-dumpkeys2(j)
+parseresults = [:]
+dumpkeys3(j, parseresults)
+println prettyPrint(toJson(parseresults))
