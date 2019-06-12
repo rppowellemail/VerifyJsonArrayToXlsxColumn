@@ -1,0 +1,48 @@
+plugins {
+    id 'groovy'
+    id 'com.github.johnrengelman.shadow' version '5.0.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+//buildscript {
+//    repositories {
+//        mavenCentral()
+//    }
+//    dependencies {
+//    //compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.7', ext: 'pom'
+//    //compile 'org.codehause.groovy:groovy-all:2.5.7'
+//    classpath 'org.apache.poi:poi-ooxml:4.1.0'
+//    classpath 'org.skyscreamer:jsonassert:1.5.0'
+//    classpath 'ch.qos.logback:logback-classic:1.2.3'
+//    }
+//}
+
+//apply plugin 'com.github.johnrengelman.shadow'
+//apply plugin 'java'
+//apply plugin 'groovy'
+
+version '1.0-SNAPSHOT'
+
+dependencies {
+    //compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.5.7', ext: 'pom'
+    compile 'org.codehaus.groovy:groovy-all:2.5.7'
+    compile 'org.apache.poi:poi-ooxml:4.1.0'
+    compile 'org.skyscreamer:jsonassert:1.5.0'
+    compile 'ch.qos.logback:logback-classic:1.2.3'
+}
+
+task runScript(dependsOn: 'classes', type: JavaExec) {
+    main = 'VerifyJsonArrayToXlsxColumn'
+    //main = 'HelloWorld'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class' : 'VerifyJsonArrayToXlsxColumn'
+        //attributes 'Main-Class' : 'HelloWorld'
+    }
+}
